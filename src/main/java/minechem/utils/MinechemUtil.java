@@ -43,6 +43,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.StatCollector;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -97,7 +98,7 @@ public final class MinechemUtil
         return itemStack;
     }
 
-    public static void throwItemStack(World world, ItemStack itemStack, double x, double y, double z)
+    public static void throwItemStack(World world, ItemStack itemStack, BlockPos pos)
     {
         if (itemStack != null)
         {
@@ -105,7 +106,7 @@ public final class MinechemUtil
             float f1 = random.nextFloat() * 0.8F + 0.1F;
             float f2 = random.nextFloat() * 0.8F + 0.1F;
 
-            EntityItem entityitem = new EntityItem(world, (float) x + f, (float) y + f1, (float) z + f2, itemStack);
+            EntityItem entityitem = new EntityItem(world, (float) pos.getX() + f, (float) pos.getY() + f1, (float) pos.getZ() + f2, itemStack);
             float f3 = 0.05F;
             entityitem.motionX = (float) random.nextGaussian() * f3;
             entityitem.motionY = (float) random.nextGaussian() * f3 + 0.2F;

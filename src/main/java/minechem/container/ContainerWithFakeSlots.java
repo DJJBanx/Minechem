@@ -6,10 +6,12 @@ import java.util.List;
 import minechem.slot.SlotFake;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 
 public class ContainerWithFakeSlots extends Container
 {
@@ -26,35 +28,36 @@ public class ContainerWithFakeSlots extends Container
      * returns a list if itemStacks, for each non-fake slot.
      */
     @Override
-    public List getInventory()
+    public NonNullList getInventory()
     {
-        ArrayList arraylist = new ArrayList();
+        NonNullList list = NonNullList.create();
 
         for (int i = 0; i < this.inventorySlots.size(); ++i)
         {
             Slot slot = ((Slot) this.inventorySlots.get(i));
-            arraylist.add((slot instanceof SlotFake) ? null : slot.getStack());
+            list.add((slot instanceof SlotFake) ? null : slot.getStack());
         }
 
-        return arraylist;
+        return list;
     }
 
+    //public ItemStack slotClick(int slotNum, int mouseButton, int isShiftPressed, EntityPlayer entityPlayer)
     @Override
-    public ItemStack slotClick(int slotNum, int mouseButton, int isShiftPressed, EntityPlayer entityPlayer)
+    public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player)
     {
         Slot slot = null;
-        if (slotNum >= 0 && slotNum < this.inventorySlots.size())
+        if (slotId >= 0 && slotId < this.inventorySlots.size())
         {
-            slot = getSlot(slotNum);
+            slot = getSlot(slotId);
         }
         if (slot != null && slot instanceof SlotFake)
         {
-            ItemStack stackOnMouse = entityPlayer.inventory.getItemStack();
+            ItemStack stackOnMouse = player.inventory.getItemStack();
             if (stackOnMouse != null && slot.isItemValid(stackOnMouse))
             {
-                if (mouseButton == MOUSE_LEFT)
+                if (clickTypeIn == ClickType.PICKUP)
                 {
-                    addStackToSlot(stackOnMouse, slot, stackOnMouse.stackSize);
+                    addStackToSlot(stackOnMouse, slot, stackOnMouse.getCount());
                 } else
                 {
                     addStackToSlot(stackOnMouse, slot, 1);
@@ -104,7 +107,7 @@ public class ContainerWithFakeSlots extends Container
             {
                 Slot slot = (Slot) this.inventorySlots.get(slotNum);
 
-                if (slot != null && func_94527_a(slot, inventoryplayer.getItemStack(), true) && slot.isItemValid(inventoryplayer.getItemStack()) && inventoryplayer.getItemStack().stackSize > this.field_94537_h.size() && this.canDragIntoSlot(slot))
+                if (slot != null && func_94527_a(slot, inventoryplayer.getItemStack(), true) && slot.isItemValid(inventoryplayer.getItemStack()) && inventoryplayer.getItemStack().getCount() > this.field_94537_h.size() && this.canDragIntoSlot(slot))
                 {
                     this.field_94537_h.add(slot);
                 }
@@ -113,37 +116,37 @@ public class ContainerWithFakeSlots extends Container
                 if (!this.field_94537_h.isEmpty())
                 {
                     itemstack3 = inventoryplayer.getItemStack().copy();
-                    i1 = inventoryplayer.getItemStack().stackSize;
+                    i1 = inventoryplayer.getItemStack().getCount();
                     Iterator iterator = this.field_94537_h.iterator();
 
                     while (iterator.hasNext())
                     {
                         Slot slot1 = (Slot) iterator.next();
 
-                        if (slot1 != null && func_94527_a(slot1, inventoryplayer.getItemStack(), true) && slot1.isItemValid(inventoryplayer.getItemStack()) && inventoryplayer.getItemStack().stackSize >= this.field_94537_h.size() && this.canDragIntoSlot(slot1))
+                        if (slot1 != null && func_94527_a(slot1, inventoryplayer.getItemStack(), true) && slot1.isItemValid(inventoryplayer.getItemStack()) && inventoryplayer.getItemStack().getCount() >= this.field_94537_h.size() && this.canDragIntoSlot(slot1))
                         {
                             ItemStack itemstack1 = itemstack3.copy();
-                            int j1 = slot1.getHasStack() ? slot1.getStack().stackSize : 0;
+                            int j1 = slot1.getHasStack() ? slot1.getStack().getCount() : 0;
                             func_94525_a(this.field_94537_h, this.field_94535_f, itemstack1, j1);
 
-                            if (itemstack1.stackSize > itemstack1.getMaxStackSize())
+                            if (itemstack1.getCount() > itemstack1.getMaxStackSize())
                             {
-                                itemstack1.stackSize = itemstack1.getMaxStackSize();
+                                itemstack1.getCount() = itemstack1.getMaxStackSize();
                             }
 
-                            if (itemstack1.stackSize > slot1.getSlotStackLimit())
+                            if (itemstack1.getCount() > slot1.getSlotStackLimit())
                             {
-                                itemstack1.stackSize = slot1.getSlotStackLimit();
+                                itemstack1.getCount() = slot1.getSlotStackLimit();
                             }
 
-                            i1 -= itemstack1.stackSize - j1;
+                            i1 -= itemstack1.getCount() - j1;
                             slot1.putStack(itemstack1);
                         }
                     }
 
-                    itemstack3.stackSize = i1;
+                    itemstack3.getCount() = i1;
 
-                    if (itemstack3.stackSize <= 0)
+                    if (itemstack3.getCount() <= 0)
                     {
                         itemstack3 = null;
                     }
@@ -181,7 +184,7 @@ public class ContainerWithFakeSlots extends Container
                         {
                             entityPlayer.dropPlayerItemWithRandomChoice(inventoryplayer.getItemStack().splitStack(1), true);
 
-                            if (inventoryplayer.getItemStack().stackSize == 0)
+                            if (inventoryplayer.getItemStack().getCount() == 0)
                             {
                                 inventoryplayer.setItemStack(null);
                             }
@@ -234,19 +237,19 @@ public class ContainerWithFakeSlots extends Container
                         {
                             if (itemstack4 != null && slot2.isItemValid(itemstack4))
                             {
-                                l1 = mouseButton == 0 ? itemstack4.stackSize : 1;
+                                l1 = mouseButton == 0 ? itemstack4.getCount() : 1;
 
                                 if (l1 > slot2.getSlotStackLimit())
                                 {
                                     l1 = slot2.getSlotStackLimit();
                                 }
 
-                                if (itemstack4.stackSize >= l1)
+                                if (itemstack4.getCount() >= l1)
                                 {
                                     slot2.putStack(itemstack4.splitStack(l1));
                                 }
 
-                                if (itemstack4.stackSize == 0)
+                                if (itemstack4.getCount() == 0)
                                 {
                                     inventoryplayer.setItemStack(null);
                                 }
@@ -255,11 +258,11 @@ public class ContainerWithFakeSlots extends Container
                         {
                             if (itemstack4 == null)
                             {
-                                l1 = mouseButton == 0 ? itemstack3.stackSize : (itemstack3.stackSize + 1) / 2;
+                                l1 = mouseButton == 0 ? itemstack3.getCount() : (itemstack3.getCount() + 1) / 2;
                                 itemstack5 = slot2.decrStackSize(l1);
                                 inventoryplayer.setItemStack(itemstack5);
 
-                                if (itemstack3.stackSize == 0)
+                                if (itemstack3.getCount() == 0)
                                 {
                                     slot2.putStack(null);
                                 }
@@ -269,41 +272,41 @@ public class ContainerWithFakeSlots extends Container
                             {
                                 if (itemstack3.getItem() == itemstack4.getItem() && itemstack3.getItemDamage() == itemstack4.getItemDamage() && ItemStack.areItemStackTagsEqual(itemstack3, itemstack4))
                                 {
-                                    l1 = mouseButton == 0 ? itemstack4.stackSize : 1;
+                                    l1 = mouseButton == 0 ? itemstack4.getCount() : 1;
 
-                                    if (l1 > slot2.getSlotStackLimit() - itemstack3.stackSize)
+                                    if (l1 > slot2.getSlotStackLimit() - itemstack3.getCount())
                                     {
-                                        l1 = slot2.getSlotStackLimit() - itemstack3.stackSize;
+                                        l1 = slot2.getSlotStackLimit() - itemstack3.getCount();
                                     }
 
-                                    if (l1 > itemstack4.getMaxStackSize() - itemstack3.stackSize)
+                                    if (l1 > itemstack4.getMaxStackSize() - itemstack3.getCount())
                                     {
-                                        l1 = itemstack4.getMaxStackSize() - itemstack3.stackSize;
+                                        l1 = itemstack4.getMaxStackSize() - itemstack3.getCount();
                                     }
 
                                     itemstack4.splitStack(l1);
 
-                                    if (itemstack4.stackSize == 0)
+                                    if (itemstack4.getCount() == 0)
                                     {
                                         inventoryplayer.setItemStack(null);
                                     }
 
-                                    itemstack3.stackSize += l1;
-                                } else if (itemstack4.stackSize <= slot2.getSlotStackLimit())
+                                    itemstack3.getCount() += l1;
+                                } else if (itemstack4.getCount() <= slot2.getSlotStackLimit())
                                 {
                                     slot2.putStack(itemstack4);
                                     inventoryplayer.setItemStack(itemstack3);
                                 }
                             } else if (itemstack3.getItem() == itemstack4.getItem() && itemstack4.getMaxStackSize() > 1 && (!itemstack3.getHasSubtypes() || itemstack3.getItemDamage() == itemstack4.getItemDamage()) && ItemStack.areItemStackTagsEqual(itemstack3, itemstack4))
                             {
-                                l1 = itemstack3.stackSize;
+                                l1 = itemstack3.getCount();
 
-                                if (l1 > 0 && l1 + itemstack4.stackSize <= itemstack4.getMaxStackSize())
+                                if (l1 > 0 && l1 + itemstack4.getCount() <= itemstack4.getMaxStackSize())
                                 {
-                                    itemstack4.stackSize += l1;
+                                    itemstack4.getCount() += l1;
                                     itemstack3 = slot2.decrStackSize(l1);
 
-                                    if (itemstack3.stackSize == 0)
+                                    if (itemstack3.getCount() == 0)
                                     {
                                         slot2.putStack(null);
                                     }
@@ -342,13 +345,13 @@ public class ContainerWithFakeSlots extends Container
                             if (l1 > -1)
                             {
                                 inventoryplayer.addItemStackToInventory(itemstack3);
-                                slot2.decrStackSize(itemstack5.stackSize);
+                                slot2.decrStackSize(itemstack5.getCount());
                                 slot2.putStack(null);
                                 slot2.onPickupFromSlot(entityPlayer, itemstack5);
                             }
                         } else
                         {
-                            slot2.decrStackSize(itemstack5.stackSize);
+                            slot2.decrStackSize(itemstack5.getCount());
                             slot2.putStack(itemstack3);
                             slot2.onPickupFromSlot(entityPlayer, itemstack5);
                         }
@@ -365,7 +368,7 @@ public class ContainerWithFakeSlots extends Container
                 if (slot2 != null && slot2.getHasStack())
                 {
                     itemstack3 = slot2.getStack().copy();
-                    itemstack3.stackSize = itemstack3.getMaxStackSize();
+                    itemstack3.getCount() = itemstack3.getMaxStackSize();
                     inventoryplayer.setItemStack(itemstack3);
                 }
             } else if (isShiftPressed == 4 && inventoryplayer.getItemStack() == null && slotNum >= 0)
@@ -374,7 +377,7 @@ public class ContainerWithFakeSlots extends Container
 
                 if (slot2 != null && slot2.getHasStack() && slot2.canTakeStack(entityPlayer))
                 {
-                    itemstack3 = slot2.decrStackSize(mouseButton == 0 ? 1 : slot2.getStack().stackSize);
+                    itemstack3 = slot2.decrStackSize(mouseButton == 0 ? 1 : slot2.getStack().getCount());
                     slot2.onPickupFromSlot(entityPlayer, itemstack3);
                     entityPlayer.dropPlayerItemWithRandomChoice(itemstack3, true);
                 }
@@ -390,20 +393,20 @@ public class ContainerWithFakeSlots extends Container
 
                     for (int i2 = 0; i2 < 2; ++i2)
                     {
-                        for (int j2 = i1; j2 >= 0 && j2 < this.inventorySlots.size() && itemstack3.stackSize < itemstack3.getMaxStackSize(); j2 += l1)
+                        for (int j2 = i1; j2 >= 0 && j2 < this.inventorySlots.size() && itemstack3.getCount() < itemstack3.getMaxStackSize(); j2 += l1)
                         {
                             Slot slot3 = (Slot) this.inventorySlots.get(j2);
                             if (slot3 instanceof SlotFake)
                             {
                                 continue;
                             }
-                            if (slot3.getHasStack() && func_94527_a(slot3, itemstack3, true) && slot3.canTakeStack(entityPlayer) && this.func_94530_a(itemstack3, slot3) && (i2 != 0 || slot3.getStack().stackSize != slot3.getStack().getMaxStackSize()))
+                            if (slot3.getHasStack() && func_94527_a(slot3, itemstack3, true) && slot3.canTakeStack(entityPlayer) && this.func_94530_a(itemstack3, slot3) && (i2 != 0 || slot3.getStack().getCount() != slot3.getStack().getMaxStackSize()))
                             {
-                                int k1 = Math.min(itemstack3.getMaxStackSize() - itemstack3.stackSize, slot3.getStack().stackSize);
+                                int k1 = Math.min(itemstack3.getMaxStackSize() - itemstack3.getCount(), slot3.getStack().getCount());
                                 ItemStack itemstack2 = slot3.decrStackSize(k1);
-                                itemstack3.stackSize += k1;
+                                itemstack3.getCount() += k1;
 
-                                if (itemstack2.stackSize <= 0)
+                                if (itemstack2.getCount() <= 0)
                                 {
                                     slot3.putStack(null);
                                 }
@@ -426,11 +429,11 @@ public class ContainerWithFakeSlots extends Container
         ItemStack stackInSlot = slot.inventory.getStackInSlot(slot.slotNumber);
         if (stackInSlot != null)
         {
-            stackInSlot.stackSize = Math.min(stackInSlot.stackSize + amount, slot.inventory.getInventoryStackLimit());
+            stackInSlot.getCount() = Math.min(stackInSlot.getCount() + amount, slot.inventory.getInventoryStackLimit());
         } else
         {
             ItemStack copyStack = stackOnMouse.copy();
-            copyStack.stackSize = amount;
+            copyStack.getCount() = amount;
             slot.putStack(copyStack);
         }
     }
